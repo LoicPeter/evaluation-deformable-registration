@@ -1,0 +1,76 @@
+//ImageTypes
+(FixedInternalImagePixelType "short")
+(MovingInternalImagePixelType "short")
+(UseDirectionCosines "true")
+
+
+//Components
+(Registration "MultiResolutionRegistration")
+(FixedImagePyramid "FixedSmoothingImagePyramid")
+(MovingImagePyramid "MovingSmoothingImagePyramid")
+(Interpolator "BSplineInterpolator")
+
+(Optimizer "AdaptiveStochasticGradientDescent")
+(ResampleInterpolator "FinalBSplineInterpolator")
+(Resampler "DefaultResampler")
+
+// ********** Pyramid
+// Total number of resolutions
+(FinalGridSpacingInPhysicalUnits 8.0 8.0 8.0)
+
+// ********** Transform
+(Transform "BSplineTransform")
+(AutomaticTransformInitialization "true")
+(AutomaticScalesEstimation "true")
+(HowToCombineTransforms "Compose")
+
+// ********** Optimizer
+// Maximum number of iterations in each resolution level:
+(AutomaticParameterEstimation "true")
+(AutomaticTransformInitializationMethod "CenterOfGravity")
+(ASGDParameterEstimationMethod "DisplacementDistribution")
+(UseAdaptiveStepSizes "false")
+//(SP_a 1000.0 1000.0 1000.0)
+
+// ********** Metric
+//Number of grey level bins in each resolution level:
+(NumberOfHistogramBins 32)
+(FixedKernelBSplineOrder 1)
+(MovingKernelBSplineOrder 3)
+
+// ********** Several
+(WriteTransformParametersEachIteration "false")
+(WriteTransformParametersEachResolution "false")
+(ShowExactMetricValue "false")
+(ErodeMask "false")
+
+// ********** ImageSampler
+// Number of spatial samples used to compute the
+// mutual information in each resolution level:
+(ImageSampler "RandomCoordinate")
+(NumberOfSpatialSamples 3000)
+(NewSamplesEveryIteration "true")
+
+// ********** Interpolator and Resampler
+//Order of B-Spline interpolation used in each resolution level:
+(BSplineInterpolationOrder 2)
+//Order of B-Spline interpolation used for applying the final deformation:
+(FinalBSplineInterpolationOrder 3)
+//Default pixel value for pixels that come from outside the picture:
+(DefaultPixelValue 0)
+
+// Choose whether to generate the deformed moving image.
+// You can save some time by setting this to false, if you are
+// only interested in the final (nonrigidly) deformed moving image
+// for example.
+(WriteResultImage "true")
+
+// The pixel type and format of the resulting deformed moving image
+(ResultImagePixelType "short")
+(ResultImageFormat "nii")
+
+
+
+(Metric "AdvancedMattesMutualInformation")
+(NumberOfResolutions 6)
+(MaximumNumberOfIterations 1000 1000 1000 1000 1000 1000 )

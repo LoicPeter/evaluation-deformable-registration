@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.7)
+PROJECT(EvaluationDeformableRegistration)
+FIND_PACKAGE( OpenCV REQUIRED )
+FIND_PACKAGE( Boost REQUIRED )
+FIND_PACKAGE(ITK REQUIRED)
+include(${ITK_USE_FILE})
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+file(GLOB SOURCES_ALGLIB alglib/src/*.cpp)
+file(GLOB SOURCES src/*.cpp)
+
+ADD_EXECUTABLE(main main.cpp ${SOURCES} ${SOURCES_ALGLIB})
+TARGET_LINK_LIBRARIES( main ${OpenCV_LIBS})
+TARGET_LINK_LIBRARIES(main ${ITK_LIBRARIES})
+INCLUDE_DIRECTORIES(include)
+INCLUDE_DIRECTORIES(alglib/include)

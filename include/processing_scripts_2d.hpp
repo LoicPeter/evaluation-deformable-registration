@@ -113,8 +113,6 @@ void square_exponential_vector_field(cv::Mat& output_map, cv::Mat& input_map)
 
 }
 
-std::string removeExtension(const std::string& inputString);
-
 
 void performScalingAndSquaring(cv::Mat& output_map, cv::Mat& SVF, int N);
 

@@ -19,6 +19,15 @@
 #include <fstream>
 
 
+std::string removeExtension(const std::string& inputString)
+{
+	std::string res;
+	int length = (int)inputString.size();
+	res = inputString.substr(0,length-4);
+	return res;
+}
+
+
 void write_elastix_settings_textfiles(const std::string& folder)
 {
     std::vector<int> iterations = {500, 1000};

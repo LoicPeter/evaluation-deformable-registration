@@ -26,18 +26,14 @@ cv::Point2f eigen_to_cv(const Eigen::Vector2d& eigen_point)
 
 void plot_landmarks_on_image(cv::Mat& image, const std::set<Eigen::Vector2d,comp_Point<2>>& landmarks, int radius, const cv::Scalar& color, int thickness)
 {
-    std::set<Eigen::Vector2d,comp_Point<2>>::const_iterator it;
-    for (it=landmarks.begin(); it!=landmarks.end(); ++it)
-    {
-        cv::circle(image,eigen_to_cv(*it),radius,color,thickness);
-    }
+    for (const auto& x : landmarks)
+        cv::circle(image,eigen_to_cv(x),radius,color,thickness);
 }
 
 void plot_landmarks_on_image(cv::Mat& image, const std::set<Eigen::Vector2d,comp_Point<2>>& landmarks, int markerType, int markerSize, const cv::Scalar& color, int thickness)
 {
-    std::set<Eigen::Vector2d,comp_Point<2>>::const_iterator it;
-    for (it=landmarks.begin(); it!=landmarks.end(); ++it)
-        cv::drawMarker(image,eigen_to_cv(*it),color,markerType,markerSize,thickness);
+    for (const auto& x : landmarks)
+        cv::drawMarker(image,eigen_to_cv(x),color,markerType,markerSize,thickness);
 }
 
 void plot_salient_and_target_points(const cv::Mat& input_image, const std::set<Eigen::Vector2d,comp_Point<2>>& salient_points, const std::set<Eigen::Vector2d,comp_Point<2>>& target_points, const std::string& filename)
@@ -80,16 +76,12 @@ void plot_2D_transformation(cv::Mat& output_image, const cv::Mat& background_ima
 void plot_2D_transformation(cv::Mat& output_image, const cv::Mat& background_image, const std::map<Eigen::Vector2d,Eigen::Vector2d,comp_Point<2>>& transformation, const std::set<Eigen::Vector2d,comp_Point<2>>& locations, const std::string& window_name, const cv::Scalar& color)
 {
     background_image.copyTo(output_image);
-    std::set<Eigen::Vector2d,comp_Point<2>>::const_iterator it;
     int thickness = 3;
     int line_type = 8;
     int shift = 0;
     double tip_length = 0.1;
-    for (it=locations.begin(); it!=locations.end(); ++it)
-    {
- //       std::cout << it->first << " " << it->second << std::endl;
-        cv::arrowedLine(output_image,eigen_to_cv(*it),eigen_to_cv(transformation.at(*it)),color,thickness,line_type,shift,tip_length);
-    }
+    for (const auto& x : locations)
+        cv::arrowedLine(output_image,eigen_to_cv(x),eigen_to_cv(transformation.at(x)),color,thickness,line_type,shift,tip_length);
     cv::imshow(window_name,output_image);
    // cv::waitKey(500);
 }
@@ -101,14 +93,14 @@ void create_heat_map_outliers(cv::Mat& heat_map, Gaussian_Process<2>& gp, const 
     heat_map = cv::Mat(nb_rows,nb_cols,CV_64F,cv::Scalar::all(0));
     Eigen::Vector2d mean_location, predicted_location;
     Eigen::Matrix2d covariance_matrix;
-    for (std::set<Eigen::Vector2d,comp_Point<2>>::const_iterator it=target_set.begin(); it!=target_set.end(); ++it)
+    for (const auto& p : target_set)
     {
-        gp.mean(mean_location,*it);
-        gp.covariance(covariance_matrix,*it,*it);
-        predicted_location = transformation_to_evaluate.at(*it);
+        gp.mean(mean_location,p);
+        gp.covariance(covariance_matrix,p,p);
+        predicted_location = transformation_to_evaluate.at(p);
         double score = compute_outlier_score_for_evaluation<2>(predicted_location,mean_location,covariance_matrix);
-        double x = (*it)(0);
-        double y = (*it)(1);
+        int x = std::round(p(0));
+        int y = std::round(p(1));
         heat_map.at<double>(y,x) = score;
     }
 }
@@ -141,13 +133,13 @@ void create_heat_map_outliers_at_predefined_candidates(cv::Mat& heat_map, Gaussi
     gp.compute_covariance_matrix_at_predefined_candidates(covariance_matrices,ind_predefined_target_set);
     std::cout << "Done" << std::endl;
         
-    for (std::map<Eigen::Vector2d,Eigen::Vector2d,comp_Point<2>>::const_iterator it=mean_locations.begin(); it!=mean_locations.end(); ++it)
+    for (auto it=mean_locations.begin(); it!=mean_locations.end(); ++it)
     {
         predicted_location = transformation_to_evaluate.at(it->first);
         mean_location = it->second;
         double score = compute_outlier_score_for_evaluation<2>(predicted_location,mean_location,covariance_matrices.at(it->first));
-        double x = (it->first)(0);
-        double y = (it->first)(1);
+        int x = std::round((it->first)(0));
+        int y = std::round((it->first)(1));
         heat_map.at<double>(y,x) = score;
  //       std::cout << it->first.x << " " << it->first.y << " " << score << std::endl;
     }
@@ -159,11 +151,11 @@ void create_heat_map_entropy_at_predefined_candidates(cv::Mat& heat_map, Gaussia
     std::map<Eigen::Vector2d,Eigen::Matrix2d,comp_Point<2>> covariance_matrices;
     gp.compute_covariance_matrix_at_predefined_candidates(covariance_matrices,ind_predefined_target_set);
         
-    for (std::map<Eigen::Vector2d,Eigen::Matrix2d,comp_Point<2>>::const_iterator it=covariance_matrices.begin(); it!=covariance_matrices.end(); ++it)
+    for (const auto& cv : covariance_matrices)
     {
-        double score = 1 + std::log(2*M_PI) + 0.5*std::log(covariance_matrices.at(it->first).determinant());
-        double x = (it->first)(0);
-        double y = (it->first)(1);
+        double score = 1 + std::log(2*M_PI) + 0.5*std::log(covariance_matrices.at(cv.first).determinant());
+        double x = (cv.first)(0);
+        double y = (cv.first)(1);
         heat_map.at<double>(y,x) = score;
     }
 }

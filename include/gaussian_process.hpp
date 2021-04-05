@@ -191,17 +191,12 @@ void Gaussian_Process<d>::covariance(Eigen::Matrix<double,d,d>& res, const Eigen
         }
         if (x==x_prime)
              preallocated_matrix_for_K_X_prime = preallocated_matrix_for_K_X_tr.transpose();
-        
-        // Using inverse
-     //   Eigen::MatrixXd res2 = res - preallocated_matrix_for_K_X_tr*K_XX_plus_noise_inv*preallocated_matrix_for_K_X_prime;
-     //   std::cout << "Using inverse: " << res2 << std::endl;
-        
+
         // Using Cholesky decomposition
         if (this->use_cholesky)
             res = res - preallocated_matrix_for_K_X_tr*(K_XX_plus_noise_cholesky.solve(preallocated_matrix_for_K_X_prime));
         else
             res = res - preallocated_matrix_for_K_X_tr*K_XX_plus_noise_inv*preallocated_matrix_for_K_X_prime;
- //       std::cout << "Using Cholesky: " << res << std::endl;
     }
 }
 
@@ -257,13 +252,11 @@ void Gaussian_Process<d>::predict_joint_unconditioned_covariance(Eigen::MatrixXd
     int nb_target_locations = target_locations.size();
     Eigen::MatrixXd temp_block(d,d);
     res.resize(d*nb_target_locations,d*nb_target_locations);
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_locations_i, it_locations_j;
     int i(0);
-    for (it_locations_i=target_locations.begin(); it_locations_i!=target_locations.end(); ++it_locations_i)
+    for (const auto it_locations_i=target_locations.begin(); it_locations_i!=target_locations.end(); ++it_locations_i)
     {
-        //std::cout << i+1 << "/" << nb_locations << " ";
         int j(i);
-        for (it_locations_j=it_locations_i; it_locations_j!=target_locations.end(); ++it_locations_j)
+        for (const auto it_locations_j=it_locations_i; it_locations_j!=target_locations.end(); ++it_locations_j)
         {
             temp_block = this->m_unconditioned_covariance_function->operator()(*it_locations_i,*it_locations_j);
             res.block(d*i,d*j,d,d) = temp_block;
@@ -443,15 +436,11 @@ void Gaussian_Process<d>::addKnownValue(const Gaussian_Process_Observation<d>& o
         UpdatableCholesky P_cholesky = K_XX_plus_noise_cholesky;
         if (this->use_cholesky)
         {
-            
-           // K_XX_plus_noise_cholesky.compute(K_XX + observation_noise_matrix); 
             K_XX_plus_noise_cholesky.update(Q,S,K_XX_tilde);
             precomputed_matrix_product_for_mean = K_XX_plus_noise_cholesky.solve(Y_minus_mu_X);
         }
         else
         {
-     //       std::cout << "Updates" << std::endl;
- 
             // Update inverse
             Eigen::MatrixXd current_inv = K_XX_plus_noise_inv; 
             efficient_update_matrix_inverse(K_XX_plus_noise_inv,current_inv,Q,R,S);
@@ -471,11 +460,10 @@ void Gaussian_Process<d>::addKnownValue(const Gaussian_Process_Observation<d>& o
             // Update K_XS
             int size_S = predefined_S[ind_S].size();
             Eigen::MatrixXd new_row_K_XS(d,d*size_S);
-            typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_candidate;
             int j(0);
-            for (it_candidate = predefined_S[ind_S].begin(); it_candidate!=predefined_S[ind_S].end(); ++it_candidate)
+            for (const auto& x : predefined_S[ind_S])
             {
-                new_row_K_XS.block(0,d*j,d,d) = this->m_unconditioned_covariance_function->operator()(obs.input_point,*it_candidate);
+                new_row_K_XS.block(0,d*j,d,d) = this->m_unconditioned_covariance_function->operator()(obs.input_point,x);
                 ++j;
             }
             K_XS[ind_S].conservativeResize(d*nb_known_values,d*size_S);
@@ -530,14 +518,13 @@ void Gaussian_Process<d>::precompute_helper_for_entropy_decrease_computation(Hel
     // Vectorise values of interest
     int nb_known_values = m_known_values.size();
     int nb_target_locations = target_locations.size();
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_target;
     std::vector<Eigen::Matrix<double,d,1>> X_vec(nb_known_values), T_vec(nb_target_locations);
     for (int ind_x=0; ind_x<nb_known_values; ++ind_x)
         X_vec[ind_x] = m_known_values[ind_x].input_point;
     int ind_T(0);
-    for (it_target = target_locations.begin(); it_target!=target_locations.end(); ++it_target)
+    for (const auto& x : target_locations)
     {
-        T_vec[ind_T] = *it_target;
+        T_vec[ind_T] = x;
         ++ind_T;
     }
     
@@ -565,12 +552,11 @@ double Gaussian_Process<d>::compute_entropy_decrease(const std::set<Eigen::Matri
     // Vectorise values of interest
     int nb_known_values = m_known_values.size();
     int nb_target_locations = target_locations.size();
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_target;
     std::vector<Eigen::Matrix<double,d,1>> X_vec(nb_known_values), T_vec(nb_target_locations);
     for (int ind_x=0; ind_x<nb_known_values; ++ind_x)
         X_vec[ind_x] = m_known_values[ind_x].input_point;
     int ind_T(0);
-    for (it_target = target_locations.begin(); it_target!=target_locations.end(); ++it_target)
+    for (const auto it_target = target_locations.begin(); it_target!=target_locations.end(); ++it_target)
     {
         T_vec[ind_T] = *it_target;
         ++ind_T;
@@ -685,14 +671,13 @@ void Gaussian_Process<d>::compute_unconditioned_K_XT(Eigen::MatrixXd& K_XT, cons
     int nb_known_values = (int)m_known_values.size();
     
     // This could be precomputed beforehand or updated efficiently
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_T;
     int j(0);
     K_XT.resize(d*nb_known_values,d*nb_targets);
-    for (it_T = T.begin(); it_T!=T.end(); ++it_T)
+    for (const auto& x : T)
     {
        for (int l=0; l<nb_known_values; ++l)
        {
-           K_XT.block(d*l,d*j,d,d) = this->m_unconditioned_covariance_function->operator()(m_known_values[l].input_point,*it_T);
+           K_XT.block(d*l,d*j,d,d) = this->m_unconditioned_covariance_function->operator()(m_known_values[l].input_point,x);
        }
        ++j;
    }
@@ -702,35 +687,17 @@ template <int d>
 void Gaussian_Process<d>::compute_entropies_of_predefined_candidates(std::map<Eigen::Matrix<double,d,1>,double,comp_Point<d>>& entropies, int ind_predefined_candidate_set)
 {
     int nb_known_values = (int)m_known_values.size();
-    
-    // This could be precomputed beforehand or updated efficiently
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_candidate;
-    int j(0);
- //   Eigen::MatrixXd K_XS(d*nb_known_values,d*nb_candidates);
- //   for (it_candidate = candidate_locations.begin(); it_candidate!=candidate_locations.end(); ++it_candidate)
- //   {
- //       for (int l=0; l<nb_known_values; ++l)
- //       {
- //           K_XS.block(d*l,d*j,d,d) = this->m_unconditioned_covariance_function->operator()(m_known_values[l].input_point,*it_candidate);
- //       }
- //       ++j;
- //   }
-    
-  //  std::cout << "Product begin" << std::endl;
-    //Eigen::MatrixXd A = K_XX_plus_noise_inv*K_XS;
+    int j=0;
     Eigen::MatrixXd A = precomputed_K_tilde_XX_inv_times_K_XS[ind_predefined_candidate_set];
-  //  std::cout << "Product end" << std::endl;
-    
     Eigen::MatrixXd cov_matrix;
-    j=0;
     entropies.clear();
-    for (it_candidate = predefined_S[ind_predefined_candidate_set].begin(); it_candidate!=predefined_S[ind_predefined_candidate_set].end(); ++it_candidate)
+    for (const auto& x : predefined_S[ind_predefined_candidate_set])
     {
-        cov_matrix = this->m_unconditioned_covariance_function->operator()(*it_candidate,*it_candidate) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A.block(0,d*j,d*nb_known_values,d));
+        cov_matrix = this->m_unconditioned_covariance_function->operator()(x,x) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A.block(0,d*j,d*nb_known_values,d));
         
         double H = 0.5*d*(1 + std::log(2*M_PI)) + 0.5*std::log(cov_matrix.determinant());
         
-        entropies.insert(std::pair<Eigen::Matrix<double,d,1>,double>(*it_candidate,H));
+        entropies.insert(std::pair<Eigen::Matrix<double,d,1>,double>(x,H));
         
         ++j;
     }
@@ -740,31 +707,13 @@ template <int d>
 double Gaussian_Process<d>::compute_trace_covariance_predefined_candidates(int ind_predefined_candidate_set)
 {
     int nb_known_values = (int)m_known_values.size();
-    
-    // This could be precomputed beforehand or updated efficiently
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_candidate;
-    int j(0);
- //   Eigen::MatrixXd K_XS(d*nb_known_values,d*nb_candidates);
- //   for (it_candidate = candidate_locations.begin(); it_candidate!=candidate_locations.end(); ++it_candidate)
- //   {
- //       for (int l=0; l<nb_known_values; ++l)
- //       {
- //           K_XS.block(d*l,d*j,d,d) = this->m_unconditioned_covariance_function->operator()(m_known_values[l].input_point,*it_candidate);
- //       }
- //       ++j;
- //   }
-    
-  //  std::cout << "Product begin" << std::endl;
-    //Eigen::MatrixXd A = K_XX_plus_noise_inv*K_XS;
+    int j = 0;
     Eigen::MatrixXd A = precomputed_K_tilde_XX_inv_times_K_XS[ind_predefined_candidate_set];
-  //  std::cout << "Product end" << std::endl;
-    
     Eigen::MatrixXd cov_matrix;
-    j=0;
     double res_trace(0);
-    for (it_candidate = predefined_S[ind_predefined_candidate_set].begin(); it_candidate!=predefined_S[ind_predefined_candidate_set].end(); ++it_candidate)
+    for (const auto& x : predefined_S[ind_predefined_candidate_set])
     {
-        cov_matrix = this->m_unconditioned_covariance_function->operator()(*it_candidate,*it_candidate) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A.block(0,d*j,d*nb_known_values,d));
+        cov_matrix = this->m_unconditioned_covariance_function->operator()(x,x) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A.block(0,d*j,d*nb_known_values,d));
         res_trace += cov_matrix.trace();
         ++j;
     }
@@ -777,20 +726,15 @@ void Gaussian_Process<d>::compute_covariance_matrix_at_predefined_candidates(std
 {
     int nb_known_values = (int)m_known_values.size();
     covariance_matrices.clear();
-    
-    // This could be precomputed beforehand or updated efficiently
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_candidate;
-    int j(0);
 
+    int j = 0;
     Eigen::MatrixXd A = precomputed_K_tilde_XX_inv_times_K_XS[ind_predefined_candidate_set];
-    
     Eigen::Matrix<double,d,d> cov_matrix;
-    j=0;
     double res_trace(0);
-    for (it_candidate = predefined_S[ind_predefined_candidate_set].begin(); it_candidate!=predefined_S[ind_predefined_candidate_set].end(); ++it_candidate)
+    for (const auto& x : predefined_S[ind_predefined_candidate_set])
     {
-        cov_matrix = this->m_unconditioned_covariance_function->operator()(*it_candidate,*it_candidate) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A.block(0,d*j,d*nb_known_values,d));
-        covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(*it_candidate,cov_matrix));
+        cov_matrix = this->m_unconditioned_covariance_function->operator()(x,x) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A.block(0,d*j,d*nb_known_values,d));
+        covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(x,cov_matrix));
         ++j;
     }
 }
@@ -800,24 +744,19 @@ void Gaussian_Process<d>::predict_transformation_at_predefined_candidates(std::m
 {
     int nb_known_values = (int)m_known_values.size();
     
-    // This could be precomputed beforehand or updated efficiently
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_candidate;
-    int j(0);
- 
     // We use the precomputed part (we could probably even update A efficiently)
     Eigen::MatrixXd A = (K_XS[ind_predefined_candidate_set].transpose())*precomputed_matrix_product_for_mean; // this should be a vector
     if (A.cols()!=1)
         std::cout << "A should be a vector!" << std::endl;
     
-    j=0;
+    int j = 0;
     predicted_transformation.clear();
-    for (it_candidate = predefined_S[ind_predefined_candidate_set].begin(); it_candidate!=predefined_S[ind_predefined_candidate_set].end(); ++it_candidate)
+    for (const auto& x : predefined_S[ind_predefined_candidate_set])
     {
-        Eigen::Matrix<double,d,1> unconditioned_point = this->m_unconditioned_mean_function->operator()(*it_candidate);
+        Eigen::Matrix<double,d,1> unconditioned_point = this->m_unconditioned_mean_function->operator()(x);
         Eigen::Matrix<double,d,1> conditioned_part = A.block(j*d,0,d,1);
         Eigen::Matrix<double,d,1> predicted_point = unconditioned_point + conditioned_part;
-        predicted_transformation.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(*it_candidate,predicted_point));
-        
+        predicted_transformation.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(x,predicted_point));
         ++j;
     }
   
@@ -828,9 +767,6 @@ void Gaussian_Process<d>::evaluate_quality(std::ofstream& infile, const std::map
 {
     
     int nb_locations = target_locations.size();    
- //   cv::Mat prediction_errors(nb_locations,1,CV_64F);
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it;
-  //convert_cv_point_to_eigen(  Eigen::Matrix<double,d,1> predicted_mean, error;
     Eigen::Matrix<double,d,1> predicted_mean, true_value, error;
     Eigen::Matrix<double,d,d> predicted_covariance_x;
     
@@ -840,21 +776,16 @@ void Gaussian_Process<d>::evaluate_quality(std::ofstream& infile, const std::map
     std::vector<double> eval_measures(nb_eval_measures,0); // MAD, RMSD, Max error, NLPP, GPE (both one variable)
     double error_norm;
     
-    for (it=target_locations.begin(); it!=target_locations.end(); ++it)
+    for (const auto& x : target_locations) // iterate over target locations x
     {
-        // Target location
-        Eigen::Matrix<double,d,1> x = *it;
-        
-        //std::cout << "Mean" << std::endl;
         // Predicted mean at x
         this->mean(predicted_mean,x);
         
-        //std::cout << "Covariance" << std::endl;
         // Predicted covariance at x
         this->covariance(predicted_covariance_x,x,x);
        
         // Displacement
-        true_value = true_transformation.at(*it);
+        true_value = true_transformation.at(x);
         
         error = true_value - predicted_mean;
         
@@ -905,27 +836,23 @@ void Gaussian_Process<d>::evaluate_quality_on_predefined_set(std::ofstream& infi
     Eigen::MatrixXd A_cov = precomputed_K_tilde_XX_inv_times_K_XS[ind_predefined_candidate_set];
      
     // Iteration over points
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_candidate;
     int j(0);
     Eigen::Matrix<double,d,1> predicted_mean, true_value, error;
     Eigen::Matrix<double,d,d> predicted_covariance_x;
-    for (it_candidate = predefined_S[ind_predefined_candidate_set].begin(); it_candidate!=predefined_S[ind_predefined_candidate_set].end(); ++it_candidate)
+    for (const auto& x : predefined_S[ind_predefined_candidate_set])
     {
         // Predicted covariance matrix
-        predicted_covariance_x = this->m_unconditioned_covariance_function->operator()(*it_candidate,*it_candidate) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A_cov.block(0,d*j,d*nb_known_values,d));
+        predicted_covariance_x = this->m_unconditioned_covariance_function->operator()(x,x) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A_cov.block(0,d*j,d*nb_known_values,d));
         
         // Predicted mean
-        predicted_mean = this->m_unconditioned_mean_function->operator()(*it_candidate) + A_mean.block(j*d,0,d,1);
+        predicted_mean = this->m_unconditioned_mean_function->operator()(x) + A_mean.block(j*d,0,d,1);
         
        // std::cout << "Predicted value: " << predicted_mean.transpose();
         
-        predicted_transformation.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(*it_candidate,predicted_mean));
+        predicted_transformation.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(x,predicted_mean));
         
         // Displacement
-        true_value = true_transformation.at(*it_candidate);
-        
-       // std::cout << " -- True value: " << true_value.transpose() << std::endl;
-        
+        true_value = true_transformation.at(x);
         error = true_value - predicted_mean;
         
         // L2 norm
@@ -984,24 +911,23 @@ void Gaussian_Process<d>::evaluate_transformations_on_predefined_set(std::vector
     
     
     // Iteration over points
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_candidate;
     int j(0);
     Eigen::Matrix<double,d,1> predicted_mean;
     Eigen::Matrix<double,d,d> predicted_covariance_x;
-    for (it_candidate = predefined_S[ind_predefined_candidate_set].begin(); it_candidate!=predefined_S[ind_predefined_candidate_set].end(); ++it_candidate)
+    for (const auto& x : predefined_S[ind_predefined_candidate_set])
     {
         // Predicted covariance matrix
         if (nb_known_values>0)
         {
-            predicted_covariance_x = this->m_unconditioned_covariance_function->operator()(*it_candidate,*it_candidate) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A_cov.block(0,d*j,d*nb_known_values,d));
+            predicted_covariance_x = this->m_unconditioned_covariance_function->operator()(x,x) - ((K_XS[ind_predefined_candidate_set].block(0,d*j,d*nb_known_values,d)).transpose())*(A_cov.block(0,d*j,d*nb_known_values,d));
             
             // Predicted mean
-            predicted_mean = this->m_unconditioned_mean_function->operator()(*it_candidate) + A_mean.block(j*d,0,d,1);
+            predicted_mean = this->m_unconditioned_mean_function->operator()(x) + A_mean.block(j*d,0,d,1);
         }
         else
         {
-            predicted_covariance_x = this->m_unconditioned_covariance_function->operator()(*it_candidate,*it_candidate);
-            predicted_mean = this->m_unconditioned_mean_function->operator()(*it_candidate);
+            predicted_covariance_x = this->m_unconditioned_covariance_function->operator()(x,x);
+            predicted_mean = this->m_unconditioned_mean_function->operator()(x);
         }
         
         
@@ -1011,7 +937,7 @@ void Gaussian_Process<d>::evaluate_transformations_on_predefined_set(std::vector
             Eigen::Matrix<double,d,1> transformation_value, difference_value;
             
             // Displacement
-            transformation_value = transformations_to_evaluate[t].at(*it_candidate);
+            transformation_value = transformations_to_evaluate[t].at(x);
             difference_value = transformation_value - predicted_mean;
         
             // L2 norm
@@ -1028,8 +954,6 @@ void Gaussian_Process<d>::evaluate_transformations_on_predefined_set(std::vector
             // Negative log-predictive probability (= negative log likelihood of the truth, as observation, given the GP)
             double individual_log_likelihood(0);
             individual_log_likelihood += 0.5*(difference_value.transpose())*(predicted_covariance_x.inverse())*difference_value;
-  //          individual_log_likelihood += std::log(2*CV_PI);
-  //          individual_log_likelihood += 0.5*std::log(predicted_covariance_x.determinant());
             transformation_scores[1][t] += individual_log_likelihood;
 
         }
@@ -1049,11 +973,6 @@ void Gaussian_Process<d>::evaluate_transformations_on_predefined_set(std::vector
             transformation_scores[0][t] = std::sqrt(transformation_scores[0][t]);
         }
     }
-    
-//     std::cout << "Likelihood scores: "; 
-//     for (int t=0; t<nb_transformations; ++t)
-//         std::cout << transformation_scores[1][t] << " ";
-//     std::cout << std::endl;
 }
 
-#endif // REGISTRATION_AVERAGING_INCLUDED
+#endif

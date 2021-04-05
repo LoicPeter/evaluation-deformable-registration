@@ -83,11 +83,11 @@ template <int d>
 void GP_Observation_Database<d>::save(const std::string& filename) const
 {
     std::ofstream infile(filename);
-    typename std::map<Eigen::Matrix<double,d,1>,Noisy_Point<d>,comp_Point<d>>::const_iterator it;
-    for (it=m_observations_map.begin(); it!=m_observations_map.end(); ++it)
+   
+    for (const auto& obs : m_observations_map)
     {
-        Eigen::Matrix<double,d,1> input_point = it->first;
-        Noisy_Point<d> output_point = it->second;
+        Eigen::Matrix<double,d,1> input_point = obs.first;
+        Noisy_Point<d> output_point = obs.second;
         Eigen::Matrix<double,d,d> cov = output_point.covariance_matrix;
         for (int k=0; k<d; ++k)
             infile << input_point(k) << " ";

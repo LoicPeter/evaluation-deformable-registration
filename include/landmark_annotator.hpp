@@ -233,31 +233,26 @@ void draw_simulated_annotations(std::map<Eigen::Matrix<double,d,1>,Eigen::Matrix
     Eigen::Matrix<double,d,d> random_cov_matrix;
     Eigen::Matrix<double,d,1> random_sample;
     
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it;
-    for (it=annotable_locations.begin(); it!=annotable_locations.end(); ++it)
+    for (const auto& x : annotable_locations)
     {
         if (unif_01(rng)<proportion_difficult_locations) // if the location is a difficult one
         {
             // Draw the mean and covariance of the annotations
             draw_random_covariance_matrix<d>(random_cov_matrix,random_sample,annotation_noise_distribution,rng,confidence_level);
-            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(*it,random_cov_matrix));
-            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(*it,true));
+            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(x,random_cov_matrix));
+            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(x,true));
         }
         else
         {
             draw_sample_from_diagonal_covariance_matrix<d>(random_sample,default_covariance_matrix,rng);
-            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(*it,default_covariance_matrix));
-            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(*it,false));
+            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(x,default_covariance_matrix));
+            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(x,false));
         }
         
         
-        Eigen::Matrix<double,d,1> mean_point = true_transformation.at(*it) + random_sample;
-        
-      // Here, we round the output to simulate the fact that a user is limited by the resolution
-      //  for (int i=0; i<d; ++i)
-      //      mean_point(i) = std::round(mean_point(i));
-        
-        annotation_noisy_outputs.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(*it,mean_point));
+        Eigen::Matrix<double,d,1> mean_point = true_transformation.at(x) + random_sample;
+
+        annotation_noisy_outputs.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(x,mean_point));
     }
 }
 
@@ -273,8 +268,7 @@ void draw_simulated_annotations_lognormal(std::map<Eigen::Matrix<double,d,1>,Eig
     Eigen::Matrix<double,d,d> random_cov_matrix;
     Eigen::Matrix<double,d,1> random_sample;
     
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it;
-    for (it=annotable_locations.begin(); it!=annotable_locations.end(); ++it)
+    for (const auto& x : annotable_locations)
     {
         if ((unif_01(rng)<proportion_difficult_locations) || (pretend_annotations_are_certain)) // if the location is a difficult one
         {
@@ -283,30 +277,30 @@ void draw_simulated_annotations_lognormal(std::map<Eigen::Matrix<double,d,1>,Eig
             
             if (pretend_annotations_are_certain)
             {
-                annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(*it,default_covariance_matrix));
-                is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(*it,false));
+                annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(x,default_covariance_matrix));
+                is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(x,false));
             }
             else
             {
-                annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(*it,random_cov_matrix));
-                is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(*it,true));
+                annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(x,random_cov_matrix));
+                is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(x,true));
             }
         }
         else
         {
             draw_sample_from_diagonal_covariance_matrix<d>(random_sample,default_covariance_matrix,rng);
-            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(*it,default_covariance_matrix));
-            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(*it,false));
+            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(x,default_covariance_matrix));
+            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(x,false));
         }
         
         
-        Eigen::Matrix<double,d,1> mean_point = true_transformation.at(*it) + random_sample;
+        Eigen::Matrix<double,d,1> mean_point = true_transformation.at(x) + random_sample;
         
     // Here, we round the output to simulate the fact that a user is limited by the resolution (not always relevant though if spacing is used)
     //    for (int i=0; i<d; ++i)
     //        mean_point(i) = std::round(mean_point(i));
         
-        annotation_noisy_outputs.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(*it,mean_point));
+        annotation_noisy_outputs.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(x,mean_point));
     }
     
     
@@ -329,21 +323,19 @@ void draw_simulated_annotations_lognormal_multiple_annotators(std::map<Eigen::Ma
     
 
     std::vector<Eigen::Matrix<double,d,1>> random_samples(nb_annotators);
-    
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it;
-    for (it=annotable_locations.begin(); it!=annotable_locations.end(); ++it)
+     for (const auto& x : annotable_locations)
     {
         if (unif_01(rng)<proportion_difficult_locations) // if the location is a difficult one
         {
             // Draw the mean and covariance of the annotations
             draw_random_sample_lognormal_multiple_annotators<d>(random_samples,normal_distribution_log_eigenvalues,rng,nb_annotators);
-            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(*it,true));
+            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(x,true));
         }
         else
         {
             for (int n=0; n<nb_annotators; ++n)
                 draw_sample_from_diagonal_covariance_matrix<d>(random_samples[n],default_covariance_matrix,rng);
-            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(*it,false));
+            is_annotation_uncertain.insert(std::pair<Eigen::Matrix<double,d,1>,bool>(x,false));
         }
         
         
@@ -352,11 +344,11 @@ void draw_simulated_annotations_lognormal_multiple_annotators(std::map<Eigen::Ma
         for (int n=0; n<nb_annotators; ++n)
             mean_sample += random_samples[n];
         mean_sample = (1/((double)nb_annotators))*mean_sample;
-        Eigen::Matrix<double,d,1> mean_point = true_transformation.at(*it) + mean_sample;
+        Eigen::Matrix<double,d,1> mean_point = true_transformation.at(x) + mean_sample;
         
        
         if ((pretend_annotations_are_certain) || (nb_annotators < 3))
-            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(*it,default_covariance_matrix));
+            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(x,default_covariance_matrix));
         else
         {
             // Compute the sample covariance matrix
@@ -367,10 +359,10 @@ void draw_simulated_annotations_lognormal_multiple_annotators(std::map<Eigen::Ma
                 sample_covariance_matrix += diff_sample*(diff_sample.transpose());
             }
             sample_covariance_matrix = (1/((double)nb_annotators-1))*sample_covariance_matrix;
-            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(*it,sample_covariance_matrix));
+            annotation_covariance_matrices.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,d>>(x,sample_covariance_matrix));
         }
         
-        annotation_noisy_outputs.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(*it,mean_point));
+        annotation_noisy_outputs.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(x,mean_point));
         
         
         double error = random_samples[0].norm();

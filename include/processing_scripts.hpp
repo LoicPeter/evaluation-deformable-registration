@@ -30,6 +30,8 @@
 enum class CoordinateType {index, realworld};
 
 
+std::string removeExtension(const std::string& inputString);
+
 template <typename T, typename comp_T>
 void create_random_sets(std::vector<std::set<T,comp_T>>& output_sets, const std::set<T,comp_T>& input_full_set, const std::vector<int>& size_sets)
 {
@@ -134,10 +136,10 @@ void write_transformix_input_points(const std::set<Eigen::Matrix<double,d,1>,com
     else
         infile << "index" << std::endl;
     infile << nb_points << std::endl;
-    for (auto it=target_points.begin(); it!=target_points.end(); ++it)
+    for (const auto& x : target_points)
     {
         for (int k=0; k<d; ++k)
-            infile << (*it)(k) << " ";
+            infile << x(k) << " ";
         infile << std::endl;
     }
     infile.close();
@@ -173,6 +175,7 @@ void read_transformix_output_points(std::map<Eigen::Matrix<double,d,1>,Eigen::Ma
 
             
         }
+        
         if ((l % 5)==4)
         {
             for (int k=0; k<3; ++k)
@@ -180,17 +183,8 @@ void read_transformix_output_points(std::map<Eigen::Matrix<double,d,1>,Eigen::Ma
             for (int k=0; k<d; ++k)
                 s_stream >> output_point(k);
             transformation.insert(std::pair<Eigen::Matrix<double,d,1>,Eigen::Matrix<double,d,1>>(input_point,output_point));
-            
-//             std::cout << "Input point: ( " ;
-//             for (int k=0; k<d; ++k)
-//                 std::cout << input_point(k) << " ";
-//             std::cout << ") ; Output point: ( ";
-//             for (int k=0; k<d; ++k)
-//                 std::cout << output_point(k) << " ";
-//             std::cout << " )" << std::endl;
         }
 
-     //   std::cout << line << std::endl;
         ++l;
     }
     

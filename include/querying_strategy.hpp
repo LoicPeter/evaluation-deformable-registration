@@ -66,4 +66,4 @@ double get_distance_to_set(const Eigen::Matrix<double,d,1>& input_point, const s
     return get_distance_to_set<d>(dummy_p,input_point,target_set);
 }
 
-#endif // REGISTRATION_AVERAGING_INCLUDED
+#endif

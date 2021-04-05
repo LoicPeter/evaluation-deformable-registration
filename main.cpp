@@ -97,17 +97,6 @@ void run_cima_example()
     // Random number generator
     boost::random::mt19937 rng;
 
-//     std::vector<std::vector<std::string>> list_files_in_folder(9);
-//     list_files_in_folder[0] = {"29-041-Izd2-w35-Cc10-5-les1","29-041-Izd2-w35-CD31-3-les1","29-041-Izd2-w35-He-les1","29-041-Izd2-w35-Ki67-7-les1","29-041-Izd2-w35-proSPC-4-les1"};
-//     list_files_in_folder[1] =  {"29-041-Izd2-w35-Cc10-5-les2","29-041-Izd2-w35-CD31-3-les2","29-041-Izd2-w35-He-les2","29-041-Izd2-w35-Ki67-7-les2","29-041-Izd2-w35-proSPC-4-les2"};
-//     list_files_in_folder[2] = {"29-041-Izd2-w35-Cc10-5-les3","29-041-Izd2-w35-CD31-3-les3","29-041-Izd2-w35-He-les3","29-041-Izd2-w35-Ki67-7-les3","29-041-Izd2-w35-proSPC-4-les3"};
-//     list_files_in_folder[3] = {"29-039-U-35W-Izd1-1-HE","29-039-U-35W-Izd1-2-cd31","29-039-U-35W-Izd1-3-Pro-SPC","29-039-U-35W-Izd1-4-cc10","29-039-U-35W-Izd1-6-ki67"};
-//     list_files_in_folder[4] = {"29-039-U-35W-Izd2-1-HE","29-039-U-35W-Izd2-2-cd31","29-039-U-35W-Izd2-3-Pro-SPC","29-039-U-35W-Izd2-4-cc10","29-039-U-35W-Izd2-6-ki67"};
-//     list_files_in_folder[5] = {"29-040-U-35W-Izd1-1-HE","29-040-U-35W-Izd1-2-cd31","29-040-U-35W-Izd1-3-Pro-SPC","29-040-U-35W-Izd1-4-cc10","29-040-U-35W-Izd1-6-ki67"};
-//     list_files_in_folder[6] =  {"29-040-U-35W-Izd2-1-HE","29-040-U-35W-Izd2-2-cd31","29-040-U-35W-Izd2-3-Pro-SPC","29-040-U-35W-Izd2-4-cc10","29-040-U-35W-Izd2-6-ki67"};
-//     list_files_in_folder[7] = {"s1_36-CNEU_A4926-4L","s1_37-HE_A4926-4L","s1_38-ER-A4962-4L","s1_40-PR_A4926-4L","s1-39-HE_A4926-4L"};
-//     list_files_in_folder[8] =  {"s2_61-HE_A4926-4L","s2_62-ER_A4926-4L","s2_63-HE_A4926-4L","s2_64-PR_A4926-4L","s2_66-CNEU_A4926-4L","s2_67-HE_A4926-4L","s2_68-ER-A4962-4L","s2_70-PR_A4926-4L"};
-
     // Pair on which the kernel hyperparameters are learned 
     std::string training_fixed_image_landmarks = data_folder + "/cima-dataset/lung-lesion_1/29-041-Izd2-w35-Cc10-5-les1.csv";
     std::string training_moving_image_landmarks = data_folder + "/cima-dataset/lung-lesion_1/29-041-Izd2-w35-CD31-3-les1.csv";

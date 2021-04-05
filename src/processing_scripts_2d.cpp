@@ -19,14 +19,6 @@
 #include "gaussian_kernel.hpp"
 #include "human_landmark_annotator.hpp"
 
-std::string removeExtension(const std::string& inputString)
-{
-	std::string res;
-	int length = (int)inputString.size();
-	res = inputString.substr(0,length-4);
-	return res;
-}
-
 
 void performScalingAndSquaring(cv::Mat& output_map, cv::Mat& SVF, int N)
 {

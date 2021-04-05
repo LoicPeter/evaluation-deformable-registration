@@ -144,27 +144,25 @@ template <typename T, typename comp_T>
 void union_sets(std::set<T,comp_T>& s_union, const std::set<T,comp_T>& s1, const std::set<T,comp_T>& s2)
 {
     s_union.clear();
-    typename std::set<T,comp_T>::const_iterator it;
-    for (it=s1.begin(); it!=s1.end(); ++it)
-        s_union.insert(*it);
-    for (it=s2.begin(); it!=s2.end(); ++it)
-        s_union.insert(*it);
+    for (const auto x : s1)
+        s_union.insert(x);
+    for (const auto x : s2)
+        s_union.insert(x);
 }
 
 
 template <typename T, typename comp_T> 
 void add_to_set(std::set<T,comp_T>& s_1, const std::set<T,comp_T>& s2)
 {
-    typename std::set<T,comp_T>::const_iterator it;
-    for (it=s2.begin(); it!=s2.end(); ++it)
-        s_1.insert(*it);
+    for (const auto x : s2)
+        s_1.insert(x);
 }
 
 template <typename T, typename comp_T>
 void get_input_set(std::set<T,comp_T>& input_set, const std::map<T,T,comp_T>& map)
 {
     input_set.clear();
-    for (const auto& pt : map)
+    for (const auto pt : map)
         input_set.insert(pt.first);
 }
 
@@ -198,27 +196,14 @@ void compute_true_transformation_scores(std::vector<double>& transformation_scor
 {
     int nb_transformations = (int)transformations_to_evaluate.size();
     transformation_scores = std::vector<double>(nb_transformations,0);
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_locations;
-    for (it_locations=target_set.begin(); it_locations!=target_set.end(); ++it_locations)
+    for (const auto& x : target_set)
     {
-        Eigen::Matrix<double,d,1> true_value = true_transformation.at(*it_locations); 
-//         try
-//         {
-//             
-//         }
-//         catch (std::exception e)
-//         {
-//             std::cout << e.what() << std::endl;
-//             Eigen::Matrix<double,d,1> closest_point;
-//             std::set<Eigen::Matrix<double,d,1>,comp_Point<d>> input_set;
-//             get_input_set(input_set,true_transformation);
-//             double dist = get_distance_to_set(closest_point,*it_locations,input_set);
-//             std::cout << it_locations->transpose() << closest_point.transpose() << std::endl;
-//         }
+        Eigen::Matrix<double,d,1> true_value = true_transformation.at(x); 
+
         for (int t=0; t<nb_transformations; ++t)
         {
 
-            Eigen::Matrix<double,d,1> transformation_value = transformations_to_evaluate[t].at(*it_locations);
+            Eigen::Matrix<double,d,1> transformation_value = transformations_to_evaluate[t].at(x);
             Eigen::Matrix<double,d,1> diff_point = transformation_value - true_value;
           //  std::cout << "True value: " << true_value.transpose() << " - Registered value: " << transformation_value.transpose() << std::endl;
             double diff_norm = diff_point.norm();
@@ -359,24 +344,23 @@ void heuristic_sampling_for_burn_in(std::vector<Eigen::Matrix<double,d,1>>& outp
     
     output_vector.resize(size_vector);
     std::set<Eigen::Matrix<double,d,1>,comp_Point<d>> selected_points;
-    typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it;
     Eigen::Matrix<double,d,1> best_point;
     for (int k=0; k<size_vector; ++k)
     {
         double best_score(-1);
-        for (it=input_full_set.begin(); it!=input_full_set.end(); ++it)
+        for (const auto& x : input_full_set)
         {
             // Compute score
             double score;
             if (k==0) 
                 score = std::rand();
             else
-                score = get_distance_to_set(*it,selected_points);
+                score = get_distance_to_set(x,selected_points);
             
             if (score>best_score)
             {
                 best_score = score;
-                best_point = *it;
+                best_point = x;
             }
         }
         
@@ -402,19 +386,19 @@ void heuristic_sampling_for_burn_in(std::vector<Gaussian_Process_Observation<d>>
     for (int k=0; k<size_vector; ++k)
     {
         double best_score(-1);
-        for (auto it=input_vector.begin(); it!=input_vector.end(); ++it)
+        for (const auto& obs : input_vector)
         {
             // Compute score
             double score;
             if (k==0) 
                 score = std::rand();
             else
-                score = get_distance_to_set(it->input_point,selected_points);
+                score = get_distance_to_set(obs.input_point,selected_points);
             
             if (score>best_score)
             {
                 best_score = score;
-                best_point = *it;
+                best_point = obs;
             }
         }
         
@@ -482,12 +466,11 @@ void evaluate_query_method(std::vector<Gaussian_Process_Observation<d>>& annotat
     // Condition the Gaussian process on T, if needed
     if (are_candidate_locations_subset_of_target==false)
     {
-        typename std::set<Eigen::Matrix<double,d,1>,comp_Point<d>>::const_iterator it_target;
-        for (it_target=target_locations.begin(); it_target!=target_locations.end(); ++it_target)
+        for (const auto& x : target_locations)
         {
             Gaussian_Process_Observation<d> obs;
-            obs.input_point = *it_target;
-            obs.output_point = *it_target; // dummy
+            obs.input_point = x;
+            obs.output_point = x; // dummy
             obs.observation_noise_covariance_matrix = Eigen::Matrix<double,d,d>::Zero();
             known_values_T_and_X.push_back(obs);
         }

@@ -199,16 +199,8 @@ PixelType BufferImage3D<PixelType>::interpolate(double x, double y, double z) co
     PixelType f_212 = this->at(x2,y1,z2);
     PixelType f_221 = this->at(x2,y2,z1);
     PixelType f_222 = this->at(x2,y2,z2);
-    
+
     // Interpolate
-//     double v_x11 = dx*v_211 + (1 - dx)*v_111;
-//     double v_x12 = dx*v_212 + (1 - dx)*v_112;
-//     double v_x21 = dx*v_221 + (1 - dx)*v_121;
-//     double v_x22 = dx*v_222 + (1 - dx)*v_122;
-//     double v_xy1 = dy*v_x21 + (1 - dy)*v_x11;
-//     double v_xy2 = dy*v_x22 + (1 - dy)*v_x12;
-//     double v_xyz = dz*v_xy2 + (1 - dz)*v_xy1;
-    
     PixelType val = dx*dy*dz*f_222 + (1-dx)*dy*dz*f_122 + dx*(1-dy)*dz*f_212 + (1-dx)*(1-dy)*dz*f_112 + dx*dy*(1-dz)*f_221 + (1-dx)*dy*(1-dz)*f_121 + dx*(1-dy)*(1-dz)*f_211 + (1-dx)*(1-dy)*(1-dz)*f_111;
         
     return val;
